@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q
+from django.contrib.auth.models import User
 
 
 class QuestionManager(models.Manager):
@@ -16,8 +17,9 @@ class QuestionManager(models.Manager):
         if user.is_anonymous():
             return qs.filter(status='public')
 
+        query = reduce(lambda q,value: q|Q(status='private', user=value), User.objects.filter(groups= user.groups.all()), Q())
         return qs.filter(
-            Q(status='public') | Q(status='private', user=user)
+                Q(status='public') | Q(status='private', user=user) | query
         )
 
 

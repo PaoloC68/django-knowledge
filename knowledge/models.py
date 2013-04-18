@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from knowledge.managers import QuestionManager, ResponseManager
 from knowledge.signals import knowledge_post_save
+from django.contrib.auth.models import User
+
 
 STATUSES = (
     ('public', _('Public')),
@@ -108,8 +110,11 @@ class KnowledgeBase(models.Model):
         if self.status == 'private':
             if self.user == user or user.is_staff:
                 return True
+            if user in User.objects.filter(groups= self.user.groups.all()):
+                return True
             if self.is_response and self.question.user == user:
                 return True
+
 
         if self.status == 'public':
             return True
