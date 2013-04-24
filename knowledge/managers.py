@@ -17,7 +17,23 @@ class QuestionManager(models.Manager):
         if user.is_anonymous():
             return qs.filter(status='public')
 
-        query = reduce(lambda q,value: q|Q(status='private', user=value), User.objects.filter(groups= user.groups.all()), Q())
+        users = None
+        try:
+            from sugarmodels.models import Account
+            account = Account.objects.filter(contacts__emails__email_address__icontains = user.email)[0]
+            email_list = []
+            for contact in account.contacts.all():
+                for email in contact.emails.all():
+                    email_list.append(email.email_address)
+            users = User.objects.filter(email__in= email_list)
+        except:
+            print 'Errors in Sugar Accounts access'
+
+        if not users:
+            users = User.objects.filter(groups= user.groups.all())
+
+        query = reduce(lambda q,value: q|Q(status='private', user=value), users, Q())
+
         return qs.filter(
                 Q(status='public') | Q(status='private', user=user) | query
         )
