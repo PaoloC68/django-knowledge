@@ -44,7 +44,11 @@ def QuestionForm(user, *args, **kwargs):
             if qf and not user.is_staff:
                 choices = list(qf.choices)
                 choices.remove(('internal', _('Internal')))
+                if not user.is_named or not user.is_customer:
+                    choices.remove(('private', _('Private')))
                 qf.choices = choices
+
+
 
             # a bit of a hack...
             # hide a field, and use clean to force
